@@ -1,8 +1,8 @@
 package main
 
 import (
+	"fmt"
 	"math"
-	"slices"
 )
 
 func IsSafeNumber(a, b int, increasing bool) bool {
@@ -17,7 +17,7 @@ func GetDirections(report []int) (int, int) {
 	for i := 0; i < len(report)-1; i++ {
 		if report[i] < report[i+1] {
 			increases++
-		} else {
+		} else if report[i] > report[i+1] {
 			decreases++
 		}
 	}
@@ -25,57 +25,67 @@ func GetDirections(report []int) (int, int) {
 	return increases, decreases
 }
 
-// gave up naming this function
-func GetSafe_part2(report []int) ([]bool, int) {
+type DirectionReport int
+
+const (
+	MoreThanOneDifferingElement DirectionReport = iota
+	Uniform
+	OneDifferingElement
+	NoDifferingElements
+)
+
+// returns -1 if it's not safe to process
+// returns 0 if it's safe to process
+// returns 1 if the
+func GetReportDirectionReport(report []int) DirectionReport {
 	increases, decreases := GetDirections(report)
-	reportLen := len(report)
-	isSafe := make([]bool, reportLen-1)
-	safeCount := 0
+
+	if increases == 0 && decreases == 0 {
+		return NoDifferingElements
+	}
+	if increases > 1 && decreases > 1 {
+		return MoreThanOneDifferingElement
+	}
+	if increases == 1 || decreases == 1 {
+		return OneDifferingElement
+	}
+	return Uniform
+}
+
+func RemoveElementNotFollowingDirection(report []int) []int {
+	increases, decreases := GetDirections(report)
 	increasing := increases > decreases
 
-	for i := 1; i < reportLen; i++ {
-		current := report[i]
-		prev := report[i-1]
-		safe := IsSafeNumber(prev, current, increasing)
-
-		if safe {
-			safeCount++
-		} else {
-			safeCount--
+	for i := 1; i < len(report); i++ {
+		if !IsSafeNumber(report[i-1], report[i], increasing) {
+			var res []int
+			res = append(res, report[:i]...)
+			res = append(res, report[i+1:]...)
+			return res
 		}
-
-		isSafe[i-1] = safe
 	}
 
-	return isSafe, safeCount
+	return report
 }
 
 func ReportSafe_part2(report []int) bool {
-	dampenedReport := report
+	directionReport := GetReportDirectionReport(report)
 
-	for i := 0; i < 2; i++ {
-		increases, decreases := GetDirections(dampenedReport)
-		if increases > 1 && decreases > 1 {
-			return false
-		}
-
-		reportLen := len(dampenedReport)
-		isSafe, safeCount := GetSafe_part2(dampenedReport)
-		safeDistance := math.Abs(float64(safeCount)) - float64(reportLen) + 1
-
-		if safeDistance > 1 {
-			return false
-		}
-
-		if safeDistance == 0 {
-			return true
-		}
-
-		indexToRemove := slices.Index(isSafe, safeCount < 0)
-		dampenedReport = append(report[:indexToRemove], report[indexToRemove+1:]...)
+	if directionReport == MoreThanOneDifferingElement || directionReport == NoDifferingElements {
+		return false
 	}
 
-	return false
+	report = RemoveElementNotFollowingDirection(report)
+	increasing, decreasing := GetDirections(report)
+	isIncreasing := increasing > decreasing
+
+	for i := 1; i < len(report); i++ {
+		if !IsSafeNumber(report[i-1], report[i], isIncreasing) {
+			return false
+		}
+	}
+
+	return true
 }
 
 func GetSafeReports_part2(reports [][]int) [][]int {
@@ -83,7 +93,10 @@ func GetSafeReports_part2(reports [][]int) [][]int {
 
 	for _, report := range reports {
 		if ReportSafe_part2(report) {
+			// println("Report", i, "is safe")
 			validReports = append(validReports, report)
+		} else {
+			fmt.Println(report)
 		}
 	}
 
