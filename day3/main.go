@@ -16,5 +16,7 @@ func main() {
 
 	input := string(dataBytes)
 	part1 := Multiply(input)
+	part2 := Multiply_part2(input)
 	println(part1)
+	println(part2)
 }
