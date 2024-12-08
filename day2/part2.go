@@ -55,12 +55,29 @@ func GetReportDirectionReport(report []int) DirectionReport {
 func RemoveElementNotFollowingDirection(report []int) []int {
 	increases, decreases := GetDirections(report)
 	increasing := increases > decreases
+	reportLen := len(report)
 
-	for i := 1; i < len(report); i++ {
-		if !IsSafeNumber(report[i-1], report[i], increasing) {
-			var res []int
-			res = append(res, report[:i]...)
-			res = append(res, report[i+1:]...)
+	for i := 0; i < reportLen; i++ {
+		var res []int
+		from := i
+		to := i + 1
+		if i == reportLen-1 {
+			from = reportLen - 1
+			to = reportLen - 2
+			if !IsSafeNumber(from, to, !increasing) {
+				return append(res, report[:to]...)
+			}
+		} else if !IsSafeNumber(report[from], report[to], increasing) {
+			if i == reportLen-2 {
+				return append(res, report[:to]...)
+			}
+			if IsSafeNumber(report[from], report[to+1], increasing) {
+				res = append(res, report[:from+1]...)
+				res = append(res, report[to+1:]...)
+			} else {
+				res = append(res, report[:from]...)
+				res = append(res, report[to:]...)
+			}
 			return res
 		}
 	}
@@ -93,7 +110,6 @@ func GetSafeReports_part2(reports [][]int) [][]int {
 
 	for _, report := range reports {
 		if ReportSafe_part2(report) {
-			// println("Report", i, "is safe")
 			validReports = append(validReports, report)
 		} else {
 			fmt.Println(report)
