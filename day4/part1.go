@@ -1,6 +1,9 @@
 package main
 
-import "strings"
+import (
+	"errors"
+	"strings"
+)
 
 type Point struct {
 	x int
@@ -98,6 +101,36 @@ func GetDirection(from, to Point) Direction {
 	}
 }
 
+func GetPointInDirection(point Point, direction Direction, inputLines []string) (Point, error) {
+	var res Point
+
+	switch direction {
+	case Up:
+		res = Point{point.x, point.y - 1}
+	case Down:
+		res = Point{point.x, point.y + 1}
+	case Left:
+		res = Point{point.x - 1, point.y}
+	case Right:
+		res = Point{point.x + 1, point.y}
+	case VirticalUpRight:
+		res = Point{point.x + 1, point.y - 1}
+	case VirticalUpLeft:
+		res = Point{point.x - 1, point.y - 1}
+	case VirticalDownRight:
+		res = Point{point.x + 1, point.y + 1}
+	case VirticalDownLeft:
+		res = Point{point.x - 1, point.y + 1}
+	default:
+		panic("Unknown direction")
+	}
+
+	if res.x < 0 || res.y < 0 || res.x >= len(inputLines[0]) || res.y >= len(inputLines) {
+		return Point{}, errors.New("Point out of bound")
+	}
+	return res, nil
+}
+
 func Xmas(input string) int {
 	inputLines := strings.Split(input, "\n")
 	res := 0
@@ -116,27 +149,15 @@ func Xmas(input string) int {
 
 			for _, MPoint := range MPoints {
 				direction := GetDirection(XPoint, MPoint)
-				APoints := GetPointsAroundWithCharacter(inputLines, MPoint, "A")
-				if len(APoints) == 0 {
+				APoint, err := GetPointInDirection(MPoint, direction, inputLines)
+				if err != nil || !HasChacterAtPoint(inputLines, APoint, "A") {
 					continue
 				}
-
-				for _, APoint := range APoints {
-					if GetDirection(MPoint, APoint) != direction {
-						continue
-					}
-					SPoints := GetPointsAroundWithCharacter(inputLines, APoint, "S")
-					if len(SPoints) == 0 {
-						continue
-					}
-
-					for _, SPoint := range SPoints {
-						if GetDirection(APoint, SPoint) != direction {
-							continue
-						}
-						res += 1
-					}
+				SPoint, err := GetPointInDirection(APoint, direction, inputLines)
+				if err != nil || !HasChacterAtPoint(inputLines, SPoint, "S") {
+					continue
 				}
+				res += 1
 			}
 		}
 	}
