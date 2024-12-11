@@ -12,7 +12,6 @@ func main() {
 		os.Exit(1)
 	}
 	filename := os.Args[1]
-	// filename := "input/part1_example"
 
 	dataBytes, err := os.ReadFile(filename)
 	if err != nil {
@@ -32,8 +31,6 @@ func main() {
 	rules := GetPageOrderingRules(rulesInput)
 	pages := GetPageOrdering(pagesInput)
 
-	// fmt.Printf("rules: %v\n", rules)
-	// fmt.Printf("pages: %v\n", pages)
-
 	fmt.Printf("%v\n", GetMiddleNumberJoinedOfValidPages(pages, rules))
+	fmt.Printf("%v\n", GetMiddleNumberJoinedOfInvalidPages(pages, rules))
 }
